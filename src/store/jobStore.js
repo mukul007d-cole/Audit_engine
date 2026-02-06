@@ -9,10 +9,12 @@ export function getJob(jobId) {
   return jobs.get(jobId) || null;
 }
 
+export function getAllJobs() {
+  return Array.from(jobs.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 export function getJobsBySellerId(sellerId) {
-  return Array.from(jobs.values())
-    .filter((job) => job.sellerId === sellerId)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return getAllJobs().filter((job) => job.sellerId === sellerId);
 }
 
 export function updateJob(jobId, patch) {

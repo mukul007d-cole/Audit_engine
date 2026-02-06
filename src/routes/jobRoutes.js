@@ -3,8 +3,9 @@ import fs from "fs";
 import multer from "multer";
 import { randomUUID } from "crypto";
 import { ALLOWED_EXT, AUDIO_DIR } from "../config/constants.js";
+import { requireAdmin } from "../middleware/adminAuth.js";
 import { validateAudioFile } from "../utils/file.js";
-import { getJob, getJobsBySellerId, saveJob, serializeJob } from "../store/jobStore.js";
+import { getAllJobs, getJob, getJobsBySellerId, saveJob, serializeJob } from "../store/jobStore.js";
 import { queueJob } from "../services/jobProcessor.js";
 
 const router = express.Router();
@@ -23,9 +24,7 @@ router.post("/jobs", upload.single("audio"), (req, res) => {
     return res.status(400).json({ error: "sellerId is required" });
   }
 
-  if (!file) {
-    return res.status(400).json({ error: "audio file required (field name: audio)" });
-  }
+  if (!file) return res.status(400).json({ error: "audio file required (field name: audio)" });
 
   const validation = validateAudioFile(file);
   if (!validation.accepted) {
@@ -35,23 +34,17 @@ router.post("/jobs", upload.single("audio"), (req, res) => {
 
     return res.status(400).json({
       error: "Unsupported file format",
-      received: {
-        originalname: file.originalname,
-        ext: validation.ext,
-        mimetype: validation.mime
-      },
+      received: { originalname: file.originalname, ext: validation.ext, mimetype: validation.mime },
       allowedExtensions: Array.from(ALLOWED_EXT)
     });
   }
 
   const id = randomUUID();
-  const createdAt = new Date().toISOString();
-
   saveJob({
     id,
     sellerId,
     status: "queued",
-    createdAt,
+    createdAt: new Date().toISOString(),
     startedAt: null,
     finishedAt: null,
     error: null,
@@ -68,27 +61,23 @@ router.post("/jobs", upload.single("audio"), (req, res) => {
     ok: true,
     message: "Job accepted for async processing",
     job: serializeJob(getJob(id)),
-    links: {
-      job: `/jobs/${id}`,
-      sellerJobs: `/sellers/${encodeURIComponent(sellerId)}/jobs`
-    }
+    links: { job: `/jobs/${id}`, sellerJobs: `/sellers/${encodeURIComponent(sellerId)}/jobs` }
   });
 });
 
 router.get("/jobs/:id", (req, res) => {
   const job = getJob(req.params.id);
-  if (!job) {
-    return res.status(404).json({ error: "Job not found" });
-  }
-
+  if (!job) return res.status(404).json({ error: "Job not found" });
   return res.json({ ok: true, job: serializeJob(job) });
 });
 
 router.get("/sellers/:sellerId/jobs", (req, res) => {
   const sellerId = String(req.params.sellerId);
-  const jobs = getJobsBySellerId(sellerId).map(serializeJob);
+  return res.json({ ok: true, sellerId, jobs: getJobsBySellerId(sellerId).map(serializeJob) });
+});
 
-  return res.json({ ok: true, sellerId, jobs });
+router.get("/admin/jobs", requireAdmin, (_req, res) => {
+  return res.json({ ok: true, jobs: getAllJobs().map(serializeJob) });
 });
 
 export default router;
