@@ -38,7 +38,7 @@ function updateSummary(jobs) {
 
 function renderJobs(jobs, token) {
   if (!jobs.length) {
-    jobsBody.innerHTML = '<tr><td colspan="5">No jobs found.</td></tr>';
+    jobsBody.innerHTML = '<tr><td colspan="6">No jobs found.</td></tr>';
     return;
   }
 
@@ -63,6 +63,7 @@ function renderJobs(jobs, token) {
       <tr>
         <td title="${job.id}"><code>${job.id}</code></td>
         <td>${job.sellerId}</td>
+        <td>${job.uploaderName || "-"}</td>
         <td><span class="${statusClass(job.status)}">${job.status}</span></td>
         <td>${fmtDate(job.createdAt)}</td>
         <td class="download-cell">${pdfLink} | ${reportLink} | ${transcriptLink}</td>
