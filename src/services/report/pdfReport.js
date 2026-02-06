@@ -31,21 +31,6 @@ function sectionTitle(doc, title) {
   doc.moveDown(0.4);
 }
 
-function addPageNumbers(doc) {
-  const range = doc.bufferedPageRange();
-  for (let i = range.start; i < range.start + range.count; i++) {
-    doc.switchToPage(i);
-    doc.fontSize(9)
-      .opacity(0.6)
-      .text(
-        `Page ${i + 1}`,
-        doc.page.margins.left,
-        doc.page.height - 40,
-        { align: "right", width: doc.page.width - 100 }
-      );
-  }
-  doc.opacity(1);
-}
 
 function drawChecklistTable(doc, rows) {
   const left = doc.page.margins.left;
