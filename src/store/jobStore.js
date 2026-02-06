@@ -30,6 +30,7 @@ export function serializeJob(job) {
   return {
     id: job.id,
     sellerId: job.sellerId,
+    uploaderName: job.uploaderName,
     status: job.status,
     createdAt: job.createdAt,
     startedAt: job.startedAt,

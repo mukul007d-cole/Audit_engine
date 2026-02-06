@@ -10,27 +10,51 @@ import { queueJob } from "../services/jobProcessor.js";
 
 const router = express.Router();
 const upload = multer({ dest: `${AUDIO_DIR}/` });
+const uploadRateLimit = new Map();
+const UPLOAD_RATE_LIMIT_MS = 2 * 60 * 1000;
+
+function cleanupUpload(file) {
+  if (file?.path) {
+    try {
+      fs.unlinkSync(file.path);
+    } catch {}
+  }
+}
 
 router.post("/jobs", upload.single("audio"), (req, res) => {
   const sellerId = String(req.body?.sellerId || "").trim();
+  const uploaderName = String(req.body?.uploaderName || "").trim();
   const file = req.file;
 
   if (!sellerId) {
-    if (file?.path) {
-      try {
-        fs.unlinkSync(file.path);
-      } catch {}
-    }
+    cleanupUpload(file);
     return res.status(400).json({ error: "sellerId is required" });
+  }
+
+  if (!uploaderName) {
+    cleanupUpload(file);
+    return res.status(400).json({ error: "uploaderName is required" });
   }
 
   if (!file) return res.status(400).json({ error: "audio file required (field name: audio)" });
 
+  const rateLimitKey = `${req.ip}:${sellerId}:${uploaderName}`;
+  const now = Date.now();
+  const lastUpload = uploadRateLimit.get(rateLimitKey);
+  if (lastUpload && now - lastUpload < UPLOAD_RATE_LIMIT_MS) {
+    cleanupUpload(file);
+    const retryAfterSeconds = Math.ceil((UPLOAD_RATE_LIMIT_MS - (now - lastUpload)) / 1000);
+    res.setHeader("Retry-After", retryAfterSeconds);
+    return res.status(429).json({
+      error: "Rate limit exceeded",
+      message: "Only one upload is allowed every 2 minutes per uploader.",
+      retryAfterSeconds
+    });
+  }
+
   const validation = validateAudioFile(file);
   if (!validation.accepted) {
-    try {
-      fs.unlinkSync(file.path);
-    } catch {}
+    cleanupUpload(file);
 
     return res.status(400).json({
       error: "Unsupported file format",
@@ -39,10 +63,13 @@ router.post("/jobs", upload.single("audio"), (req, res) => {
     });
   }
 
+  uploadRateLimit.set(rateLimitKey, now);
+
   const id = randomUUID();
   saveJob({
     id,
     sellerId,
+    uploaderName,
     status: "queued",
     createdAt: new Date().toISOString(),
     startedAt: null,

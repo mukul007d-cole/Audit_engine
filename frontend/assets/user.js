@@ -8,9 +8,25 @@ form.addEventListener("submit", async (event) => {
   output.textContent = "Submitting...";
 
   const formData = new FormData(form);
-  const response = await fetch("/jobs", { method: "POST", body: formData });
-  const data = await response.json();
+  let response;
+  try {
+    response = await fetch("/jobs", { method: "POST", body: formData });
+  } catch (error) {
+    output.textContent = `Request failed: ${error.message}`;
+    return;
+  }
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = { error: "Unable to parse server response." };
+  }
+
   output.textContent = JSON.stringify(data, null, 2);
+  if (!response.ok) {
+    return;
+  }
 
   if (data?.job?.id) {
     jobIdInput.value = data.job.id;
