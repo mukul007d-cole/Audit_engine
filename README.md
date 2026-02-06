@@ -74,20 +74,16 @@ Admin endpoints require:
 Authorization: Bearer <ADMIN_TOKEN>
 ```
 
-## Production deployment on AWS
+## Simple AWS deployment (low-traffic setup)
 
-This project is ready to deploy on AWS as a single Node.js app on **EC2**, with **Nginx** for reverse proxy and TLS.
+If this app is not expected to get much load, keep deployment simple:
 
-### Recommended AWS architecture (simple + production-ready)
+- 1 EC2 instance (Ubuntu)
+- Node.js app managed by systemd
+- Nginx reverse proxy
+- HTTPS using Certbot directly on the same EC2
 
-- **EC2 (Ubuntu)**: runs Node.js app via systemd
-- **Nginx**: reverse proxy, request size limits, static file serving
-- **Route53**: domain DNS
-- **AWS Certificate Manager + ALB** *(recommended)* OR Certbot on EC2
-- **CloudWatch Agent**: server/app logs and basic metrics
-- **Security Group**:
-  - allow inbound `80` and `443` from internet
-  - allow inbound `22` only from your office/home IP
+This avoids ALB/ECS complexity and is enough for small-to-moderate traffic.
 
 ### Required environment variables
 
@@ -106,21 +102,24 @@ NODE_ENV=production
 2. Keep `.env` out of git.
 3. Ensure persistent disk space for `storage/audio` and `storage/audits`.
 4. Enable HTTPS.
-5. Add monitoring against `GET /health`.
+5. Add at least a basic uptime check against `GET /health`.
 6. Restrict SSH in security groups.
 
 ---
 
-## Step-by-step: Deploy on AWS EC2
+## Step-by-step: Deploy on AWS EC2 (simple)
 
-### 1) Launch EC2
+### 1) Launch one EC2 instance
 
 - AMI: Ubuntu LTS
-- Instance type: at least `t3.small` (or higher for heavy workloads)
+- Instance type: `t3.small` is enough for low traffic
 - Storage: start with 20+ GB gp3
-- Attach a security group with ports 22/80/443 as noted above.
+- Security Group inbound rules:
+  - `22` from your IP only
+  - `80` from anywhere (`0.0.0.0/0`)
+  - `443` from anywhere (`0.0.0.0/0`)
 
-### 2) Connect and install dependencies
+### 2) Connect and install system packages
 
 ```bash
 ssh -i <your-key>.pem ubuntu@<ec2-public-ip>
@@ -130,17 +129,25 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
-### 3) Clone project and configure app
+### 3) Clone app and install dependencies
 
 ```bash
 cd /opt
 sudo git clone <your_repo_url> Audit_engine
 cd Audit_engine
+sudo chown -R ubuntu:ubuntu /opt/Audit_engine
 npm ci --omit=dev
 cp .env.example .env
 ```
 
-Edit `.env` with production values.
+Edit `.env` and set:
+
+```env
+PORT=3000
+OPENAI_API_KEY=<your_key>
+ADMIN_TOKEN=<very_long_random_secret>
+NODE_ENV=production
+```
 
 Set permissions for runtime folders:
 
@@ -149,7 +156,7 @@ sudo mkdir -p storage/audio storage/audits
 sudo chown -R ubuntu:ubuntu storage
 ```
 
-### 4) Create systemd service
+### 4) Run the app with systemd
 
 Create `/etc/systemd/system/audit-engine.service`:
 
@@ -182,7 +189,7 @@ sudo systemctl start audit-engine
 sudo systemctl status audit-engine
 ```
 
-### 5) Configure Nginx
+### 5) Configure Nginx reverse proxy
 
 Create `/etc/nginx/sites-available/audit-engine`:
 
@@ -212,24 +219,32 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 6) Configure DNS and TLS
+### 6) Point your domain to EC2
 
-#### Option A (recommended): ALB + ACM
+- In Route53 (or any DNS provider), create an `A` record:
+  - Name: your domain (for example `audit.yourdomain.com`)
+  - Value: your EC2 public IPv4 address
+- Wait for DNS to propagate.
 
-- Create an Application Load Balancer in front of EC2.
-- Request certificate in ACM.
-- Attach cert to HTTPS listener (443).
-- Route53 `A` record -> ALB.
-- Security group: ALB allows 80/443, EC2 allows traffic from ALB SG.
-
-#### Option B: Certbot directly on EC2
+### 7) Enable HTTPS with Certbot
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d your-domain.com
 ```
 
-### 7) Health checks and operations
+Certbot will:
+- install TLS certificate,
+- update Nginx config,
+- reload Nginx automatically.
+
+Verify auto-renewal:
+
+```bash
+sudo systemctl status certbot.timer
+```
+
+### 8) Validate and operate
 
 - Test app health:
 
@@ -249,13 +264,12 @@ sudo journalctl -u audit-engine -f
 sudo systemctl restart audit-engine
 ```
 
-### 8) Recommended AWS hardening
+### 9) (Optional) basic hardening
 
-- Put EC2 in private subnet and expose only ALB publicly.
-- Use AWS Systems Manager Session Manager instead of public SSH where possible.
-- Store secrets in **AWS Systems Manager Parameter Store** or **AWS Secrets Manager**.
-- Ship Nginx and systemd logs to CloudWatch Logs.
-- Set CloudWatch alarm on `/health` failure.
+- Keep SSH (`22`) restricted to your IP.
+- Take an AMI snapshot after successful setup.
+- Move secrets to AWS Systems Manager Parameter Store later if needed.
+- Add CloudWatch alarm on simple uptime check if desired.
 
 ## Optional: container deployment on AWS ECS
 
