@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
+    "check": "node --check src/server.js && node --check src/app.js && node --check src/routes/jobRoutes.js && node --check src/services/jobProcessor.js && node --check src/store/jobStore.js && node --check src/utils/file.js && node --check src/extract.js && node --check src/pdf.js && node --check src/schema.js"
   },
   "repository": {
     "type": "git",
