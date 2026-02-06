@@ -53,7 +53,17 @@ export async function extractChecklist(transcriptText) {
     {
       role: "system",
       content:
-        "You are an audit analyst. Mark discussed=true only when explicitly present. Output JSON matching schema. Every string in the output must be plain Roman-script Hinglish (ASCII only). Never use Devanagari or special Unicode punctuation/symbols."
+        "You are an audit analyst.\n" +
+        "Each checklist item has a short intent code.\n" +
+        "Interpret intents as follows:\n" +
+        "- *_verified: seller confirms the detail\n" +
+        "- *_discussed: topic is talked about\n" +
+        "- *_explained: process or policy is explained\n\n" +
+        "Rules:\n" +
+        "- discussed=true ONLY if present.\n" +
+        "- evidence: max 1 short quote (<=120 chars).\n" +
+        "- ASCII Roman-script Hinglish only no devnagri.\n" +
+        "- final_answer = 'Yes' if >=70% discussed=true, else 'No'."
     },
     {
       role: "user",
