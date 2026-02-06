@@ -9,10 +9,43 @@
   <body>
     <main class="container">
       <h1>Admin Portal</h1>
-      <p>Authenticated view for monitoring all job activity.</p>
+      <p>Authenticated view for monitoring all job activity and downloading outputs.</p>
+
       <section class="card">
-        <label>Admin Token <input id="admin-token" type="password" /></label>
-        <button id="load-jobs">Load Jobs</button>
+        <div class="admin-controls">
+          <label>Admin Token <input id="admin-token" type="password" /></label>
+          <div class="admin-actions">
+            <button id="load-jobs">Load Jobs</button>
+            <button id="auto-refresh" class="secondary">Enable Auto Refresh</button>
+          </div>
+        </div>
+        <div id="admin-summary" class="admin-summary"></div>
+      </section>
+
+      <section class="card">
+        <h2>Jobs</h2>
+        <div class="table-wrap">
+          <table class="jobs-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Seller</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Downloads</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-body">
+              <tr>
+                <td colspan="5">Load jobs to view records.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Response Log</h2>
         <pre id="admin-output"></pre>
       </section>
     </main>

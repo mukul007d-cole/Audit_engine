@@ -5,6 +5,7 @@ import jobRoutes from "./routes/jobRoutes.js";
 import { AUDIO_DIR, AUDIT_DIR, FRONTEND_DIR } from "./config/constants.js";
 
 const app = express();
+app.disable("x-powered-by");
 
 fs.mkdirSync(AUDIO_DIR, { recursive: true });
 fs.mkdirSync(AUDIT_DIR, { recursive: true });
@@ -17,5 +18,6 @@ app.use("/frontend", express.static(path.resolve(FRONTEND_DIR)));
 app.get("/", (_req, res) => res.redirect("/user"));
 app.get("/user", (_req, res) => res.sendFile(path.resolve(FRONTEND_DIR, "user.html")));
 app.get("/admin", (_req, res) => res.sendFile(path.resolve(FRONTEND_DIR, "admin.html")));
+app.get("/health", (_req, res) => res.json({ ok: true, status: "healthy", timestamp: new Date().toISOString() }));
 
 export default app;

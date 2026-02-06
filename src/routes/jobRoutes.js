@@ -80,4 +80,24 @@ router.get("/admin/jobs", requireAdmin, (_req, res) => {
   return res.json({ ok: true, jobs: getAllJobs().map(serializeJob) });
 });
 
+router.get("/admin/jobs/:id/report", requireAdmin, (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: "Job not found" });
+  if (!job.report) return res.status(404).json({ error: "Report not available yet" });
+
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename=\"${job.id}_report.json\"`);
+  return res.send(JSON.stringify(job.report, null, 2));
+});
+
+router.get("/admin/jobs/:id/transcript", requireAdmin, (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: "Job not found" });
+  if (!job.transcript) return res.status(404).json({ error: "Transcript not available yet" });
+
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename=\"${job.id}_transcript.txt\"`);
+  return res.send(job.transcript);
+});
+
 export default router;
