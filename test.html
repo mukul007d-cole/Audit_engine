@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Audit Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f7f9;
+      padding: 40px;
+    }
+    .box {
+      background: #fff;
+      padding: 24px;
+      max-width: 420px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    h2 {
+      margin-top: 0;
+    }
+    input[type="file"] {
+      margin: 12px 0;
+    }
+    button {
+      padding: 10px 16px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    .error {
+      color: #dc2626;
+    }
+    .success {
+      color: #16a34a;
+    }
+    .hint {
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Upload Call Recording</h2>
+
+    <form id="uploadForm">
+      <input
+        type="file"
+        name="audio"
+        id="audio"
+        accept=".wav,.mp3,.mpeg,.mpga,.m4a,.ogg"
+        required
+      />
+      <div class="hint">
+        Supported formats: WAV, MP3, MPEG, M4A, OGG
+      </div>
+
+      <br />
+      <button type="submit" id="submitBtn">Upload & Audit</button>
+    </form>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const statusEl = document.getElementById("status");
+    const btn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fileInput = document.getElementById("audio");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        statusEl.textContent = "Please select an audio file.";
+        statusEl.className = "status error";
+        return;
+      }
+
+      // Basic sanity checks
+      const maxSizeMB = 50;
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        statusEl.textContent = "File too large. Max 50MB allowed.";
+        statusEl.className = "status error";
+        return;
+      }
+
+      statusEl.textContent = "Uploading and processing… This may take a minute.";
+      statusEl.className = "status";
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append("audio", file);
+
+      try {
+        const res = await fetch("http://localhost:3000/process-call", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Upload failed");
+        }
+
+        statusEl.innerHTML = `
+          <span class="success">
+            Audit completed successfully.<br />
+            <a href="${data.pdf}" target="_blank">Open Audit PDF</a>
+          </span>
+        `;
+
+        // Optional: auto-open PDF
+        window.open(data.pdf, "_blank");
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status error";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
