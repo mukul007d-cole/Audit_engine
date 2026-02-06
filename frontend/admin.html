@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audit Engine - Admin Portal</title>
+    <link rel="stylesheet" href="/frontend/assets/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Admin Portal</h1>
+      <p>Authenticated view for monitoring all job activity.</p>
+      <section class="card">
+        <label>Admin Token <input id="admin-token" type="password" /></label>
+        <button id="load-jobs">Load Jobs</button>
+        <pre id="admin-output"></pre>
+      </section>
+    </main>
+
+    <script src="/frontend/assets/admin.js" type="module"></script>
+  </body>
+</html>
