@@ -45,3 +45,11 @@ checkBtn.addEventListener("click", async () => {
   const data = await response.json();
   output.textContent = JSON.stringify(data, null, 2);
 });
+
+const adminBtn = document.getElementById("admin-btn");
+
+if (adminBtn) {
+  adminBtn.addEventListener("click", () => {
+    window.location.href = "/admin";
+  });
+}

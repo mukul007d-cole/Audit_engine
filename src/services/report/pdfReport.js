@@ -76,56 +76,57 @@ function drawOverviewTable(doc, rows) {
   const left = doc.page.margins.left;
   const pageW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
-  const colTopic = Math.floor(pageW * 0.32);
-  const colYN = 55;
+  // Give Evidence more space
+  const colTopic = Math.floor(pageW * 0.30); // was 0.32
+  const colYN = 60;                          // slightly wider
   const colEv = pageW - colTopic - colYN;
 
-  // ---------- Header (aligned) ----------
-  doc.fontSize(10).opacity(0.85);
+  // Header
+  doc.fontSize(10.5).opacity(0.85);
   const hy = doc.y;
 
   doc.text("Topic", left, hy, { width: colTopic });
-  doc.text("Yes/No", left + colTopic, hy, { width: colYN, align: "left" });
+  doc.text("Yes/No", left + colTopic, hy, { width: colYN });
   doc.text("Evidence", left + colTopic + colYN, hy, { width: colEv });
 
-  // move down by one header line (instead of letting text calls drift y)
-  doc.y = hy + doc.currentLineHeight() + 4;
+  doc.y = hy + doc.currentLineHeight() + 6;
   doc.opacity(1);
   hr(doc);
 
-  // ---------- Rows (aligned) ----------
+  // Rows
+  doc.fontSize(10.5);
+
   rows.forEach((q) => {
     const discussed = (q?.discussed ?? q?.mentioned) === true;
     const topic = truncate(q?.title || `Q${q?.id ?? ""}`, 60);
     const evidence = pickEvidence(q);
 
-    // measure heights BEFORE drawing
-    doc.fontSize(10);
     const y = doc.y;
 
-    const hTopic = doc.heightOfString(topic, { width: colTopic });
-    const hYN = doc.heightOfString(yesNo(discussed), { width: colYN });
-    const hEv = doc.heightOfString(evidence, { width: colEv });
+    const hTopic = doc.heightOfString(topic, { width: colTopic, lineGap: 2 });
+    const hYN = doc.heightOfString(yesNo(discussed), { width: colYN, lineGap: 2 });
+    const hEv = doc.heightOfString(evidence, { width: colEv, lineGap: 2 });
 
     const rowH = Math.max(hTopic, hYN, hEv);
-    ensureSpace(doc, rowH + 12);
+    ensureSpace(doc, rowH + 14);
 
-    // draw all columns at the SAME y
-    doc.text(topic, left, y, { width: colTopic });
-    doc.text(yesNo(discussed), left + colTopic, y, { width: colYN });
-    doc.text(evidence, left + colTopic + colYN, y, { width: colEv });
+    // Draw on same baseline
+    doc.text(topic, left, y, { width: colTopic, lineGap: 2 });
+    doc.text(yesNo(discussed), left + colTopic, y, { width: colYN, lineGap: 2 });
+    doc.text(evidence, left + colTopic + colYN, y, { width: colEv, lineGap: 2 });
 
-    // manually advance to next row
-    doc.y = y + rowH + 8;
+    // A touch more spacing between rows
+    doc.y = y + rowH + 10;
   });
 }
+
 
 
 export function generatePdfReport(reportJson, outPath) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: "A4",
-      margin: 46,
+      margin: 42,
       bufferPages: true
     });
 
@@ -136,16 +137,16 @@ export function generatePdfReport(reportJson, outPath) {
     const { final, yesCount, total } = computeFinalYesNo(questions);
 
     // -------- Header (small) --------
-    doc.fontSize(16).text("Call Audit Report", { align: "center" });
-    doc.moveDown(0.2);
-    doc.fontSize(9).opacity(0.8).text("Summary + Checklist Overview", { align: "center" });
+    doc.fontSize(18).text("Call Audit Report", { align: "center" });
+    doc.moveDown(0.15);
+    doc.fontSize(10).opacity(0.85).text("Summary + Checklist Overview", { align: "center" });
     doc.opacity(1);
     hr(doc);
 
     // -------- Summary --------
     sectionTitle(doc, "Summary");
-    doc.fontSize(10).text(reportJson?.call_summary || "N/A", {
-      lineGap: 2
+    doc.fontSize(11).text(reportJson?.call_summary || "N/A", {
+      lineGap: 3
     });
     hr(doc);
 

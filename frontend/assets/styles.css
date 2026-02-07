@@ -257,3 +257,27 @@ pre{
   .container{ margin: 1.4rem auto; }
   .card{ padding: 1rem; }
 }
+
+#admin-btn {
+  position: fixed;
+  top: 30px;
+  right: 40px;
+  z-index: 1000;
+
+  font-size: 15px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #ffffff;
+  color: #333;
+  cursor: pointer;
+
+  opacity: 0.75;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+#admin-btn:hover {
+  opacity: 1;
+  background: #f5f5f5;
+}
+
