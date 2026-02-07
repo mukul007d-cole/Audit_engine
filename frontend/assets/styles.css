@@ -260,8 +260,8 @@ pre{
 
 #admin-btn {
   position: fixed;
-  top: 30px;
-  right: 40px;
+  top: -12px;
+  right: 3px;
   z-index: 1000;
 
   font-size: 15px;
@@ -272,7 +272,7 @@ pre{
   color: #333;
   cursor: pointer;
 
-  opacity: 0.75;
+  opacity: 0.32;
   transition: opacity 0.15s ease, background 0.15s ease;
 }
 
