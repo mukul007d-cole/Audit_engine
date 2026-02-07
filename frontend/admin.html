@@ -19,6 +19,52 @@
             <button id="auto-refresh" class="secondary">Enable Auto Refresh</button>
           </div>
         </div>
+        <div class="admin-filters">
+          <div class="filter-row">
+            <label class="filter-field">
+              Search
+              <input
+                id="search"
+                type="text"
+                placeholder="Search by ID, seller, uploader, status..."
+                autocomplete="off"
+              />
+            </label>
+        
+            <label class="filter-field">
+              From
+              <input id="date-from" type="date" />
+            </label>
+        
+            <label class="filter-field">
+              To
+              <input id="date-to" type="date" />
+            </label>
+          </div>
+        
+          <div class="filter-row">
+            <label class="filter-chip">
+              <input id="only-completed" type="checkbox" />
+              Completed
+            </label>
+        
+            <label class="filter-chip">
+              <input id="only-failed" type="checkbox" />
+              Failed
+            </label>
+        
+            <label class="filter-chip">
+              <input id="only-processing" type="checkbox" />
+              Processing
+            </label>
+        
+            <button id="clear-filters" class="secondary" type="button">Clear</button>
+          </div>
+        
+          <div class="filter-meta">
+            <span id="results-count"></span>
+          </div>
+        </div>        
         <div id="admin-summary" class="admin-summary"></div>
       </section>
 

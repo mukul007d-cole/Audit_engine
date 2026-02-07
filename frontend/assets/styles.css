@@ -281,3 +281,71 @@ pre{
   background: #f5f5f5;
 }
 
+
+.admin-filters {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.filter-field input[type="text"],
+.filter-field input[type="date"] {
+  height: 34px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  outline: none;
+  min-width: 180px;
+}
+
+#search {
+  min-width: 280px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  font-size: 15px;
+  opacity: 0.95;
+  user-select: none;
+}
+
+.filter-chip input {
+  transform: translateY(1px);
+}
+
+.filter-meta {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  #search {
+    min-width: 220px;
+  }
+  .filter-field input[type="text"],
+  .filter-field input[type="date"] {
+    min-width: 160px;
+  }
+}
