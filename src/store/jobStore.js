@@ -37,6 +37,7 @@ export function serializeJob(job) {
     finishedAt: job.finishedAt,
     error: job.error,
     fileName: job.fileName,
+    deleteAfter: job.deleteAfter,
     pdf: job.pdf,
     report: job.report,
     transcript: job.transcript

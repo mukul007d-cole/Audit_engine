@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import jobRoutes from "./routes/jobRoutes.js";
+import { startAudioCleanup } from "./services/audioCleanup.js";
 import { AUDIO_DIR, AUDIT_DIR, FRONTEND_DIR } from "./config/constants.js";
 
 const app = express();
@@ -19,5 +20,7 @@ app.get("/", (_req, res) => res.redirect("/user"));
 app.get("/user", (_req, res) => res.sendFile(path.resolve(FRONTEND_DIR, "user.html")));
 app.get("/admin", (_req, res) => res.sendFile(path.resolve(FRONTEND_DIR, "admin.html")));
 app.get("/health", (_req, res) => res.json({ ok: true, status: "healthy", timestamp: new Date().toISOString() }));
+
+startAudioCleanup();
 
 export default app;

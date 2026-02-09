@@ -13,6 +13,7 @@ Audit Engine is a Node.js + Express service that accepts seller onboarding call 
   3. Audio is transcribed using OpenAI.
   4. Checklist extraction is generated using a strict JSON schema.
   5. PDF report is produced and saved under `storage/audits`.
+  6. Uploaded audio is retained for 24 hours (cleanup runs periodically) and then removed.
 
 ## Tech stack
 
@@ -100,7 +101,7 @@ NODE_ENV=production
 
 1. Use a strong `ADMIN_TOKEN` (32+ chars random).
 2. Keep `.env` out of git.
-3. Ensure persistent disk space for `storage/audio` and `storage/audits`.
+3. Ensure persistent disk space for `storage/audio` and `storage/audits` (audio retention defaults to 24 hours).
 4. Enable HTTPS.
 5. Add at least a basic uptime check against `GET /health`.
 6. Restrict SSH in security groups.

@@ -2,7 +2,7 @@ import express from "express";
 import fs from "fs";
 import multer from "multer";
 import { randomUUID } from "crypto";
-import { ALLOWED_EXT, AUDIO_DIR } from "../config/constants.js";
+import { ALLOWED_EXT, AUDIO_DIR, AUDIO_RETENTION_MS } from "../config/constants.js";
 import { requireAdmin } from "../middleware/adminAuth.js";
 import { validateAudioFile } from "../utils/file.js";
 import { getAllJobs, getJob, getJobsBySellerId, saveJob, serializeJob } from "../store/jobStore.js";
@@ -79,7 +79,8 @@ router.post("/jobs", upload.single("audio"), (req, res) => {
     filePath: file.path,
     pdf: null,
     report: null,
-    transcript: null
+    transcript: null,
+    deleteAfter: new Date(Date.now() + AUDIO_RETENTION_MS).toISOString()
   });
 
   queueJob(id);
