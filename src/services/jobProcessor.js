@@ -3,7 +3,7 @@ import path from "path";
 import { transcribeAudio, extractChecklist } from "./ai/extractor.js";
 import { generatePdfReport } from "./report/pdfReport.js";
 import { getJob, updateJob } from "../store/jobStore.js";
-import { AUDIT_DIR } from "../config/constants.js";
+import { AUDIT_DIR, AUDIO_RETENTION_MS } from "../config/constants.js";
 import { getDateTimeSuffix, sanitizeFileName } from "../utils/file.js";
 
 export async function processJob(jobId) {
@@ -34,6 +34,7 @@ export async function processJob(jobId) {
       error: error?.message || "Unknown error"
     });
   } finally {
+    if (AUDIO_RETENTION_MS > 0) return;
     try {
       fs.unlinkSync(job.filePath);
     } catch {}
