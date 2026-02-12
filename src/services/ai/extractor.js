@@ -1,8 +1,13 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
+import { promisify } from "util";
+import { execFile } from "child_process";
 import { toFile } from "openai/uploads";
 import openai from "./openaiClient.js";
 import { extractionSchema, questions } from "../../config/auditSchema.js";
+
+const execFileAsync = promisify(execFile);
 
 const FORMAT_HINTS = [".mp3", ".m4a", ".wav", ".mpeg", ".mp4", ".webm", ".ogg", ".aac"];
 const MIME_EXTENSION_MAP = new Map([
@@ -43,30 +48,71 @@ function buildFilenameCandidates(originalname, mimetype) {
   return Array.from(candidates);
 }
 
+async function convertAudioToWav(filePath) {
+  const outputPath = path.join(os.tmpdir(), `audit-${Date.now()}-${Math.random().toString(36).slice(2)}.wav`);
+
+  try {
+    await execFileAsync("ffmpeg", ["-y", "-i", filePath, "-vn", "-ac", "1", "-ar", "16000", outputPath]);
+    return outputPath;
+  } catch (error) {
+    throw new Error(
+      `Audio conversion failed${error?.stderr ? `: ${String(error.stderr).trim().slice(0, 300)}` : "."}`
+    );
+  }
+}
+
 export async function transcribeAudio(filePath, originalname, mimetype) {
-  const audioBuffer = await fs.promises.readFile(filePath);
+  const isLikelyRawAac = /\.aac$/i.test(String(originalname || "")) || /aac|adts/.test(String(mimetype || ""));
+
+  const tryTranscription = async (sourcePath, candidateNames) => {
+    const audioBuffer = await fs.promises.readFile(sourcePath);
+    for (const candidateName of candidateNames) {
+      try {
+        const file = await toFile(audioBuffer, candidateName);
+        const result = await openai.audio.transcriptions.create({
+          file,
+          model: "gpt-4o-transcribe",
+          response_format: "json",
+          prompt:
+            "This is a business onboarding call in Hindi+English (Hinglish) about Amazon seller setup, pricing, FBA, verification, and launch readiness. Transcribe spoken Hindi using Roman script (Hinglish), not Devanagari."
+        });
+
+        const text = getTranscriptText(result);
+        if (!text) {
+          throw new Error("Transcription returned no text. Check audio file integrity and response shape.");
+        }
+
+        return text;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    return null;
+  };
+
   const candidates = buildFilenameCandidates(originalname, mimetype);
   let lastError = null;
 
-  for (const candidateName of candidates) {
+  const directText = await tryTranscription(filePath, candidates);
+  if (directText) return directText;
+
+  const canTryWavFallback =
+    isLikelyRawAac || /unsupported|corrupt|invalid|decode|adts/i.test(String(lastError?.message || ""));
+
+  if (canTryWavFallback) {
+    let convertedPath = null;
     try {
-      const file = await toFile(audioBuffer, candidateName);
-      const result = await openai.audio.transcriptions.create({
-        file,
-        model: "gpt-4o-transcribe",
-        response_format: "json",
-        prompt:
-          "This is a business onboarding call in Hindi+English (Hinglish) about Amazon seller setup, pricing, FBA, verification, and launch readiness. Transcribe spoken Hindi using Roman script (Hinglish), not Devanagari."
-      });
-
-      const text = getTranscriptText(result);
-      if (!text) {
-        throw new Error("Transcription returned no text. Check audio file integrity and response shape.");
+      convertedPath = await convertAudioToWav(filePath);
+      const wavName = `${path.basename(String(originalname || "audio"), path.extname(String(originalname || "audio")))}.wav`;
+      const fallbackText = await tryTranscription(convertedPath, [wavName]);
+      if (fallbackText) return fallbackText;
+    } finally {
+      if (convertedPath) {
+        try {
+          await fs.promises.unlink(convertedPath);
+        } catch {}
       }
-
-      return text;
-    } catch (error) {
-      lastError = error;
     }
   }
 
