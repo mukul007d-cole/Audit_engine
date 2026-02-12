@@ -373,3 +373,23 @@ pre{
 .pagination-row button {
   margin-top: 0;
 }
+
+
+button:disabled{
+  background: #9aa6bd;
+  border-color: rgba(91, 100, 117, 0.35);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+button:disabled:hover{
+  background: #9aa6bd;
+  box-shadow: none;
+}
+
+.file-error{
+  min-height: 1.2rem;
+  margin: 0.45rem 0 0;
+  color: #dc2626;
+  font-size: 0.9rem;
+}
