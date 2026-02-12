@@ -3,51 +3,73 @@ const checkBtn = document.getElementById("check-job");
 const jobIdInput = document.getElementById("job-id");
 const output = document.getElementById("job-output");
 
+function setMessage(message) {
+  output.textContent = message;
+}
+
+function renderJobStatus(job) {
+  if (!job) {
+    setMessage("Job details are not available right now.");
+    return;
+  }
+
+  const lines = [
+    `Job ID: ${job.id}`,
+    `Status: ${job.status}`,
+    `Created: ${new Date(job.createdAt).toLocaleString()}`
+  ];
+
+  if (job.error) lines.push(`Reason: ${job.error}`);
+  if (job.pdf) lines.push(`PDF Ready: ${job.pdf}`);
+
+  setMessage(lines.join("\n"));
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  output.textContent = "Submitting...";
+  setMessage("Submitting your file...");
 
   const formData = new FormData(form);
-  let response;
   try {
-    response = await fetch("/jobs", { method: "POST", body: formData });
+    const response = await fetch("/jobs", { method: "POST", body: formData });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data?.error || "Upload failed. Please try another audio file.");
+      return;
+    }
+
+    if (data?.job?.id) jobIdInput.value = data.job.id;
+    setMessage(`Upload accepted. Track your job using ID: ${data?.job?.id || "-"}`);
   } catch (error) {
-    output.textContent = `Request failed: ${error.message}`;
-    return;
-  }
-
-  let data = null;
-  try {
-    data = await response.json();
-  } catch (error) {
-    data = { error: "Unable to parse server response." };
-  }
-
-  output.textContent = JSON.stringify(data, null, 2);
-  if (!response.ok) {
-    return;
-  }
-
-  if (data?.job?.id) {
-    jobIdInput.value = data.job.id;
+    setMessage(`Request failed: ${error.message}`);
   }
 });
 
 checkBtn.addEventListener("click", async () => {
   const jobId = jobIdInput.value.trim();
   if (!jobId) {
-    output.textContent = "Enter a job ID first.";
+    setMessage("Enter a Job ID first.");
     return;
   }
 
-  output.textContent = "Loading job...";
-  const response = await fetch(`/jobs/${encodeURIComponent(jobId)}`);
-  const data = await response.json();
-  output.textContent = JSON.stringify(data, null, 2);
+  setMessage("Checking status...");
+  try {
+    const response = await fetch(`/jobs/${encodeURIComponent(jobId)}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data?.error || "Unable to fetch this job.");
+      return;
+    }
+
+    renderJobStatus(data.job);
+  } catch (error) {
+    setMessage(`Unable to fetch status: ${error.message}`);
+  }
 });
 
 const adminBtn = document.getElementById("admin-btn");
-
 if (adminBtn) {
   adminBtn.addEventListener("click", () => {
     window.location.href = "/admin";

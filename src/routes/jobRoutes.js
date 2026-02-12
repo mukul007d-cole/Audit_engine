@@ -12,6 +12,8 @@ const router = express.Router();
 const upload = multer({ dest: `${AUDIO_DIR}/` });
 const uploadRateLimit = new Map();
 const UPLOAD_RATE_LIMIT_MS = 2 * 60 * 1000;
+const DEFAULT_PAGE_SIZE = 25;
+const MAX_PAGE_SIZE = 100;
 
 function cleanupUpload(file) {
   if (file?.path) {
@@ -19,6 +21,40 @@ function cleanupUpload(file) {
       fs.unlinkSync(file.path);
     } catch {}
   }
+}
+
+function parsePagination(query) {
+  const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number.parseInt(query.pageSize, 10) || DEFAULT_PAGE_SIZE));
+  return { page, pageSize };
+}
+
+function filterJobs(jobs, query) {
+  const search = String(query.search || "").trim().toLowerCase();
+  const status = String(query.status || "").trim().toLowerCase();
+  const from = query.from ? new Date(String(query.from)) : null;
+  const to = query.to ? new Date(String(query.to)) : null;
+
+  const fromTs = from && !Number.isNaN(from.getTime()) ? from.setHours(0, 0, 0, 0) : null;
+  const toTs = to && !Number.isNaN(to.getTime()) ? to.setHours(23, 59, 59, 999) : null;
+
+  return jobs.filter((job) => {
+    if (search) {
+      const haystack = `${job.id} ${job.sellerId} ${job.uploaderName} ${job.status}`.toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+
+    if (status && String(job.status || "").toLowerCase() !== status) return false;
+
+    if (fromTs || toTs) {
+      const created = new Date(job.createdAt).getTime();
+      if (!Number.isFinite(created)) return false;
+      if (fromTs && created < fromTs) return false;
+      if (toTs && created > toTs) return false;
+    }
+
+    return true;
+  });
 }
 
 router.post("/jobs", upload.single("audio"), (req, res) => {
@@ -77,6 +113,7 @@ router.post("/jobs", upload.single("audio"), (req, res) => {
     error: null,
     fileName: file.originalname,
     filePath: file.path,
+    fileMime: file.mimetype,
     pdf: null,
     report: null,
     transcript: null,
@@ -104,8 +141,28 @@ router.get("/sellers/:sellerId/jobs", (req, res) => {
   return res.json({ ok: true, sellerId, jobs: getJobsBySellerId(sellerId).map(serializeJob) });
 });
 
-router.get("/admin/jobs", requireAdmin, (_req, res) => {
-  return res.json({ ok: true, jobs: getAllJobs().map(serializeJob) });
+router.get("/admin/jobs", requireAdmin, (req, res) => {
+  const { page, pageSize } = parsePagination(req.query);
+  const filtered = filterJobs(getAllJobs(), req.query);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const start = (currentPage - 1) * pageSize;
+  const pagedJobs = filtered.slice(start, start + pageSize).map((job) => serializeJob(job, { includeContent: false }));
+
+  return res.json({
+    ok: true,
+    jobs: pagedJobs,
+    pagination: {
+      page: currentPage,
+      pageSize,
+      total,
+      totalPages,
+      hasNext: currentPage < totalPages,
+      hasPrev: currentPage > 1
+    }
+  });
 });
 
 router.get("/admin/jobs/:id/report", requireAdmin, (req, res) => {

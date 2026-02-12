@@ -25,8 +25,11 @@ export function updateJob(jobId, patch) {
   return next;
 }
 
-export function serializeJob(job) {
+export function serializeJob(job, options = {}) {
   if (!job) return null;
+
+  const includeContent = options.includeContent ?? true;
+
   return {
     id: job.id,
     sellerId: job.sellerId,
@@ -39,7 +42,7 @@ export function serializeJob(job) {
     fileName: job.fileName,
     deleteAfter: job.deleteAfter,
     pdf: job.pdf,
-    report: job.report,
-    transcript: job.transcript
+    report: includeContent ? job.report : Boolean(job.report),
+    transcript: includeContent ? job.transcript : Boolean(job.transcript)
   };
 }

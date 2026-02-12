@@ -23,49 +23,41 @@
           <div class="filter-row">
             <label class="filter-field">
               Search
-              <input
-                id="search"
-                type="text"
-                placeholder="Search by ID, seller, uploader, status..."
-                autocomplete="off"
-              />
+              <input id="search" type="text" placeholder="Search by ID, seller, uploader..." autocomplete="off" />
             </label>
-        
             <label class="filter-field">
               From
               <input id="date-from" type="date" />
             </label>
-        
             <label class="filter-field">
               To
               <input id="date-to" type="date" />
             </label>
-          </div>
-        
-          <div class="filter-row">
-            <label class="filter-chip">
-              <input id="only-completed" type="checkbox" />
-              Completed
+            <label class="filter-field">
+              Status
+              <select id="status-filter">
+                <option value="">All</option>
+                <option value="queued">Queued</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+              </select>
             </label>
-        
-            <label class="filter-chip">
-              <input id="only-failed" type="checkbox" />
-              Failed
+            <label class="filter-field">
+              Page Size
+              <select id="page-size">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
             </label>
-        
-            <label class="filter-chip">
-              <input id="only-processing" type="checkbox" />
-              Processing
-            </label>
-        
             <button id="clear-filters" class="secondary" type="button">Clear</button>
           </div>
-        
-          <div class="filter-meta">
-            <span id="results-count"></span>
-          </div>
-        </div>        
+          <div class="filter-meta"><span id="results-count"></span></div>
+        </div>
         <div id="admin-summary" class="admin-summary"></div>
+        <p id="admin-output" class="plain-output">Ready.</p>
       </section>
 
       <section class="card">
@@ -89,11 +81,11 @@
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section class="card">
-        <h2>Response Log</h2>
-        <pre id="admin-output"></pre>
+        <div class="pagination-row">
+          <button id="prev-page" class="secondary" type="button">Previous</button>
+          <span id="page-indicator">Page 1 / 1</span>
+          <button id="next-page" class="secondary" type="button">Next</button>
+        </div>
       </section>
     </main>
 
