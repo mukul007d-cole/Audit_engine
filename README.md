@@ -62,7 +62,7 @@ Endpoints:
 
 ## API overview
 
-- `POST /jobs` (multipart/form-data: `audio`, `sellerId`) => queues a job.
+- `POST /jobs` (multipart/form-data: `audio`, `sellerId`) => queues a job. Supported audio formats: `.mp3`, `.wav`, `.m4a`.
 - `GET /jobs/:id` => fetch one job status.
 - `GET /sellers/:sellerId/jobs` => fetch jobs for seller.
 - `GET /admin/jobs` => admin list all jobs.

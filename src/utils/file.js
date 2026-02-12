@@ -28,7 +28,7 @@ export function validateAudioFile(file) {
     ALLOWED_MIME_EXACT.has(mime);
 
   return {
-    accepted: extOk || mimeOk,
+    accepted: extOk && mimeOk,
     ext,
     mime
   };
