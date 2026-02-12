@@ -3,7 +3,7 @@ export const AUDIO_DIR = "storage/audio";
 export const AUDIT_DIR = "storage/audits";
 export const AUDIO_RETENTION_MS = 24 * 60 * 60 * 1000;
 export const FRONTEND_DIR = "frontend";
-export const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+export const ADMIN_TOKEN = "wellsureaudit1";
 
 export const ALLOWED_EXT = new Set([
   ".wav",
