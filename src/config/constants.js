@@ -6,26 +6,9 @@ export const FRONTEND_DIR = "frontend";
 export const ADMIN_TOKEN = "wellsureaudit1";
 
 export const ALLOWED_EXT = new Set([
-  ".wav",
   ".mp3",
-  ".m4a",
-  ".ogg",
-  ".webm",
-  ".mpeg",
-  ".mpga",
-  ".mpg",
-  ".aac",
-  ".mp4",
-  ".mov",
-  ".opus",
-  ".oga",
-  ".flac",
-  ".aif",
-  ".aiff",
-  ".wma",
-  ".amr",
-  ".3gp",
-  ".opdownload"
+  ".wav",
+  ".m4a"
 ]);
-export const ALLOWED_MIME_PREFIX = ["audio/", "video/"];
-export const ALLOWED_MIME_EXACT = new Set(["application/octet-stream", "video/mpeg", "application/mp4"]);
+export const ALLOWED_MIME_PREFIX = [];
+export const ALLOWED_MIME_EXACT = new Set(["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/mp4", "audio/x-m4a"]);

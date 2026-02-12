@@ -18,8 +18,9 @@
       <form id="job-form" class="card">
         <label>Seller ID <input name="sellerId" required /></label>
         <label>Uploader Name <input name="uploaderName" required /></label>
-        <label>Audio File <input type="file" name="audio" accept="audio/*" required /></label>
-        <button type="submit">Submit Job</button>
+        <label>Audio File <input type="file" name="audio" accept=".mp3,.wav,.m4a" required /></label>
+        <p id="file-error" class="file-error" aria-live="polite"></p>
+        <button id="submit-job" type="submit" disabled>Submit Job</button>
       </form>
 
       <section class="card">

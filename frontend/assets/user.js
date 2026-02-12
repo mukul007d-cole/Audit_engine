@@ -2,6 +2,39 @@ const form = document.getElementById("job-form");
 const checkBtn = document.getElementById("check-job");
 const jobIdInput = document.getElementById("job-id");
 const output = document.getElementById("job-output");
+const audioInput = form.querySelector('input[name="audio"]');
+const submitBtn = document.getElementById("submit-job");
+const fileError = document.getElementById("file-error");
+const allowedExtensions = [".mp3", ".wav", ".m4a"];
+
+function validateSelectedFile() {
+  const selectedFile = audioInput?.files?.[0];
+
+  if (!selectedFile) {
+    submitBtn.disabled = true;
+    fileError.textContent = "Upload a file in MP3, WAV, or M4A format.";
+    return false;
+  }
+
+  const lowerName = String(selectedFile.name || "").toLowerCase();
+  const hasAllowedExtension = allowedExtensions.some((ext) => lowerName.endsWith(ext));
+
+  if (!hasAllowedExtension) {
+    submitBtn.disabled = true;
+    fileError.textContent = "Upload a file in MP3, WAV, or M4A format.";
+    return false;
+  }
+
+  submitBtn.disabled = false;
+  fileError.textContent = "";
+  return true;
+}
+
+if (audioInput) {
+  audioInput.addEventListener("change", validateSelectedFile);
+  validateSelectedFile();
+}
+
 
 function setMessage(message) {
   output.textContent = message;
@@ -27,6 +60,10 @@ function renderJobStatus(job) {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!validateSelectedFile()) {
+    return;
+  }
+
   setMessage("Submitting your file...");
 
   const formData = new FormData(form);
