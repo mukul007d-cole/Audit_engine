@@ -1,26 +1,72 @@
 import fs from "fs";
+import path from "path";
 import { toFile } from "openai/uploads";
 import openai from "./openaiClient.js";
 import { extractionSchema, questions } from "../../config/auditSchema.js";
 
-export async function transcribeAudio(filePath, originalname) {
-  const file = await toFile(fs.createReadStream(filePath), originalname);
-  const result = await openai.audio.transcriptions.create({
-    file,
-    model: "gpt-4o-transcribe",
-    response_format: "json",
-    prompt:
-      "This is a business onboarding call in Hindi+English (Hinglish) about Amazon seller setup, pricing, FBA, verification, and launch readiness. Transcribe spoken Hindi using Roman script (Hinglish), not Devanagari."
-  });
+const FORMAT_HINTS = [".mp3", ".m4a", ".wav", ".mpeg", ".mp4", ".webm", ".ogg"];
+const MIME_EXTENSION_MAP = new Map([
+  ["audio/mpeg", ".mp3"],
+  ["audio/mp3", ".mp3"],
+  ["audio/mp4", ".m4a"],
+  ["audio/x-m4a", ".m4a"],
+  ["audio/wav", ".wav"],
+  ["audio/x-wav", ".wav"],
+  ["audio/webm", ".webm"],
+  ["audio/ogg", ".ogg"],
+  ["video/mp4", ".mp4"],
+  ["video/mpeg", ".mpeg"]
+]);
 
-  const text =
-    (typeof result === "string" && result) || result?.text || result?.transcript || result?.data?.text;
+function getTranscriptText(result) {
+  return (typeof result === "string" && result) || result?.text || result?.transcript || result?.data?.text;
+}
 
-  if (!text) {
-    throw new Error("Transcription returned no text. Check audio file integrity and response shape.");
+function buildFilenameCandidates(originalname, mimetype) {
+  const original = String(originalname || "audio").trim() || "audio";
+  const ext = path.extname(original).toLowerCase();
+  const base = path.basename(original, ext).replace(/[^a-zA-Z0-9_-]/g, "_") || "audio";
+  const mime = String(mimetype || "").toLowerCase();
+
+  const candidates = new Set([original]);
+  const knownExt = MIME_EXTENSION_MAP.get(mime);
+  if (knownExt) candidates.add(`${base}${knownExt}`);
+
+  for (const hint of FORMAT_HINTS) {
+    candidates.add(`${base}${hint}`);
   }
 
-  return text;
+  return Array.from(candidates);
+}
+
+export async function transcribeAudio(filePath, originalname, mimetype) {
+  const audioBuffer = await fs.promises.readFile(filePath);
+  const candidates = buildFilenameCandidates(originalname, mimetype);
+  let lastError = null;
+
+  for (const candidateName of candidates) {
+    try {
+      const file = await toFile(audioBuffer, candidateName);
+      const result = await openai.audio.transcriptions.create({
+        file,
+        model: "gpt-4o-transcribe",
+        response_format: "json",
+        prompt:
+          "This is a business onboarding call in Hindi+English (Hinglish) about Amazon seller setup, pricing, FBA, verification, and launch readiness. Transcribe spoken Hindi using Roman script (Hinglish), not Devanagari."
+      });
+
+      const text = getTranscriptText(result);
+      if (!text) {
+        throw new Error("Transcription returned no text. Check audio file integrity and response shape.");
+      }
+
+      return text;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw new Error(lastError?.message || "Unable to transcribe this audio file.");
 }
 
 function normalizeHinglishText(value) {

@@ -13,7 +13,7 @@ export async function processJob(jobId) {
   updateJob(jobId, { status: "processing", startedAt: new Date().toISOString() });
 
   try {
-    const transcript = await transcribeAudio(job.filePath, job.fileName);
+    const transcript = await transcribeAudio(job.filePath, job.fileName, job.fileMime);
     const report = await extractChecklist(transcript);
     const pdfName = `${sanitizeFileName(job.fileName)}_${job.sellerId}_${getDateTimeSuffix()}.pdf`;
     const outPath = path.join(AUDIT_DIR, pdfName);
