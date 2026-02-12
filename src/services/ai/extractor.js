@@ -4,12 +4,16 @@ import { toFile } from "openai/uploads";
 import openai from "./openaiClient.js";
 import { extractionSchema, questions } from "../../config/auditSchema.js";
 
-const FORMAT_HINTS = [".mp3", ".m4a", ".wav", ".mpeg", ".mp4", ".webm", ".ogg"];
+const FORMAT_HINTS = [".mp3", ".m4a", ".wav", ".mpeg", ".mp4", ".webm", ".ogg", ".aac"];
 const MIME_EXTENSION_MAP = new Map([
   ["audio/mpeg", ".mp3"],
   ["audio/mp3", ".mp3"],
   ["audio/mp4", ".m4a"],
   ["audio/x-m4a", ".m4a"],
+  ["audio/aac", ".aac"],
+  ["audio/x-aac", ".aac"],
+  ["audio/aacp", ".aac"],
+  ["audio/vnd.dlna.adts", ".aac"],
   ["audio/wav", ".wav"],
   ["audio/x-wav", ".wav"],
   ["audio/webm", ".webm"],
