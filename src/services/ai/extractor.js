@@ -114,7 +114,7 @@ export async function extractChecklist(transcriptText) {
   ];
 
   const resp = await openai.responses.create({
-    model: "gpt-5.2",
+    model: "gpt-4o-mini",
     input,
     text: {
       format: {
